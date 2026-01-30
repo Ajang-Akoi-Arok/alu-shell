@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# This script manages the manage_my_process daemon (start, stop, restart)
+
+# Define PID file location
+PIDFILE="/var/run/my_process.pid"
+
+# Function to start the process
+start_process() {
+    # Start the process in the background
+    /root/manage_my_process &
+    
+    # Get the PID of the last background process
+    PID=$!
+    
+    # Save the PID to the PID file
+    echo $PID > "$PIDFILE"
+    
+    echo "manage_my_process started"
+}
+
+# Function to stop the process
+stop_process() {
+    # Check if PID file exists
+    if [ -f "$PIDFILE" ]; then
+        # Read PID from file
+        PID=$(cat "$PIDFILE")
+        
+        # Kill the process
+        kill "$PID" 2>/dev/null
+        
+        # Remove PID file
+        rm -f "$PIDFILE"
+        
+        echo "manage_my_process stopped"
+    else
+        echo "PID file not found. Process may not be running."
+    fi
+}
+
+# Function to restart the process
+restart_process() {
+    stop_process
+    sleep 1
+    start_process
+    echo "manage_my_process restarted"
+}
+
+# Main script logic
+case "$1" in
+    start)
+        start_process
+        ;;
+    stop)
+        stop_process
+        ;;
+    restart)
+        restart_process
+        ;;
+    *)
+        echo "Usage: manage_my_process {start|stop|restart}"
+        exit 1
+        ;;
+esac
